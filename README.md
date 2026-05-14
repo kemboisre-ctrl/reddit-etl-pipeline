@@ -50,3 +50,94 @@ def transform(meta: list) -&gt; dict:
 @dag
 def pipeline():
     transform(extract())
+
+Inicio Rapido
+Pre-requisitos
+Docker + Docker Compose
+Credenciais da API Reddit (https://www.reddit.com/prefs/apps)
+Conta AWS (free tier e suficiente)
+1. Clonar e Setup
+git clone <url-do-seu-repo>
+cd reddit-etl-pipeline
+chmod +x setup.sh && ./setup.sh
+
+2. Configurar Credenciais
+Edite .env:
+REDDIT_CLIENT_ID=seu_id_aqui
+REDDIT_CLIENT_SECRET=seu_secret_aqui
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+AWS_DEFAULT_REGION=us-east-1
+AWS_S3_BUCKET=seu-bucket-unico
+REDSHIFT_HOST=seu-cluster.region.redshift.amazonaws.com
+REDSHIFT_PORT=5439
+REDSHIFT_DB=dev
+REDSHIFT_USER=awsuser
+REDSHIFT_PASSWORD=sua_senha
+REDSHIFT_IAM_ROLE=arn:aws:iam::123456789012:role/RedshiftS3Role
+
+3. Build e Inicializacao
+docker-compose build
+docker-compose up airflow-init
+docker-compose up -d
+
+4. Acessar Servicos
+| Servico    | URL                     | Credenciais       |
+| ---------- | ----------------------- | ----------------- |
+| Airflow UI | <http://localhost:8080> | admin / admin     |
+| Postgres   | localhost:5432          | airflow / airflow |
+
+5. Executar o Pipeline
+Abra a UI do Airflow -> ative o DAG reddit_etl_pipeline para On
+Clique no botao play para disparar uma execucao manual
+Acompanhe a progressao: extract -> transform -> load
+Clique em qualquer tarefa -> Log para ver output em tempo real
+6. Verificar Resultados
+aws s3 ls s3://seu-bucket/raw/reddit/dataengineering/
+psql -h seu-host-redshift -U awsuser -d dev -c "SELECT COUNT(*) FROM reddit_posts;"
+
+Otimizacao do Redshift
+CREATE TABLE reddit_posts (
+    id              VARCHAR(10) DISTKEY,
+    title           VARCHAR(500),
+    author          VARCHAR(50),
+    score           INTEGER,
+    upvote_ratio    FLOAT,
+    num_comments    INTEGER,
+    created_utc     FLOAT,
+    subreddit       VARCHAR(50) SORTKEY,
+    url             VARCHAR(500),
+    selftext        VARCHAR(2000),
+    is_video        BOOLEAN,
+    over_18         BOOLEAN,
+    stickied        BOOLEAN,
+    engagement_ratio FLOAT,
+    high_engagement  BOOLEAN,
+    processed_date   DATE,
+    extracted_at     VARCHAR(30)
+);
+
+Terraform
+cd infrastructure/terraform
+terraform init
+terraform plan -var="s3_bucket_name=seu-bucket-unico" -var="redshift_password=SenhaSegura123!"
+terraform apply
+
+Comandos Makefile
+make build    # Build das imagens Docker
+make init     # Inicializar DB do Airflow
+make up       # Iniciar todos os servicos
+make down     # Parar todos os servicos
+make logs     # Acompanhar logs do scheduler
+make test     # Executar testes unitarios
+make clean    # Remover containers e volumes
+
+Licenca
+MIT — Construido para aprendizado e demonstracao de portfolio.
+
+**Como usar:**
+1. Clique no botão de copiar (ícone no canto superior direito do bloco de código)
+2. Cole no arquivo `README.md` do seu repositório GitHub
+3. Commit e push
+
+O texto acima usa apenas caracteres ASCII padrão (sem acentos codificados de forma estranha) para garantir que renderize corretamente no GitHub.
