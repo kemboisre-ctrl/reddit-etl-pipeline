@@ -140,4 +140,4 @@ MIT — Construido para aprendizado e demonstracao de portfolio.
 2. Cole no arquivo `README.md` do seu repositório GitHub
 3. Commit e push
 
-O texto acima usa apenas caracteres ASCII padrão (sem acentos codificados de forma estranha) para garantir que renderize corretamente no GitHub.
+
